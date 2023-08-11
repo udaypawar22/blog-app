@@ -8,9 +8,10 @@ import UserContextProvider from "./components/UserContext";
 import ProfiilePage from "./pages/ProfilePage";
 import Post from "./pages/Post";
 import BlogPage from "./pages/BlogPage";
+import ClassPage from "./pages/ClassPage";
 
 function App() {
-  axios.defaults.baseURL = "http://localhost:4000";
+  axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
   axios.defaults.withCredentials = true;
   return (
     <UserContextProvider>
@@ -20,7 +21,8 @@ function App() {
           <Route path="/profile" element={<ProfiilePage />} />
           <Route path="/profile/create" element={<Post />} />
           <Route path="/:id" element={<BlogPage />} />
-          <Route path="/profile/:id" element={<BlogPage />} />
+          <Route path="/trends/:category" element={<ClassPage />} />
+          <Route path="/profile/edit/:id" element={<Post />} />
         </Route>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />

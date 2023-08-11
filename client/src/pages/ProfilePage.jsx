@@ -3,17 +3,30 @@ import { UserContext } from "../components/UserContext";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import LoadingAnimation from "../components/LoadingAnimation";
 
 export default function ProfiilePage() {
   const navigate = useNavigate();
-  const { setUser, user, loading } = useContext(UserContext);
+  const { setUser, user, loading: contextLoading } = useContext(UserContext);
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`/post?data=${user}`).then((response) => {
-      const { data } = response;
-      setPosts(data);
-    });
+    if (user) {
+      axios
+        .get(`/post?data=${user}`)
+        .then((response) => {
+          const { data } = response;
+          setPosts(data);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
   function logout() {
@@ -25,15 +38,15 @@ export default function ProfiilePage() {
     });
   }
 
-  if (loading) {
-    return "loading";
+  if (contextLoading || loading) {
+    return <LoadingAnimation />;
   }
   if (!user) {
     navigate("/login");
   }
 
   return (
-    <div className="pt-20 px-12 md:px-36 min-h-screen">
+    <div className="pt-20 px-12 lg:px-36 min-h-screen">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl md:text-5xl text-gray-400 font-bold w-fit">
           {user}
@@ -41,7 +54,7 @@ export default function ProfiilePage() {
         <div className="flex gap-2">
           <Link
             to={"/profile/create"}
-            className="flex gap-1 items-center text-darkblue py-2 px-3 rounded-full border border-gray-400 shadow-md"
+            className="flex gap-1 items-center text-darkblue py-2 px-3 rounded-full border border-gray-400 shadow-md hover:bg-darkblue hover:text-white"
           >
             <span className="text-lg">New</span>
             <svg
@@ -61,7 +74,7 @@ export default function ProfiilePage() {
           </Link>
           <button
             onClick={logout}
-            className="flex gap-1 items-center text-darkblue py-2 px-3 rounded-full border border-gray-400 shadow-md"
+            className="flex gap-1 items-center text-darkblue py-2 px-3 rounded-full border border-gray-400 shadow-md hover:bg-darkblue hover:text-white"
           >
             <span className="text-lg">Logout</span>
             <svg
@@ -84,12 +97,16 @@ export default function ProfiilePage() {
       <div className="pt-10 pb-8 grid gap-y-8">
         {posts.length > 0 &&
           posts.map((post) => (
-            <Link to={`/profile/${post._id}`}>
+            <Link to={`/${post._id}`} className="shadow">
               <div className="w-full relative">
                 <motion.button
                   className="absolute top-2 right-2 text-white p-2"
                   whileHover={{ scale: 1.2 }}
                   whileTap={{ scale: 0.8 }}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    navigate(`/profile/edit/${post._id}`);
+                  }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -107,12 +124,12 @@ export default function ProfiilePage() {
                   </svg>
                 </motion.button>
                 <div className="absolute top-3/4 w-full">
-                  <h1 className="ml-10 w-3/4 lg:w-1/4 text-3xl font-medium text-white truncate">
+                  <h1 className="ml-10 w-3/4 py-2 lg:w-1/4 text-4xl font-medium text-white truncate italic">
                     {post.title}
                   </h1>
                 </div>
                 <img
-                  className="w-full h-[300px] md:h-[500px] object-cover aspect-square"
+                  className="w-full h-[300px] lg:h-[500px] object-cover aspect-square"
                   src={"http://localhost:4000/uploads/" + post.cover}
                   alt=""
                 />

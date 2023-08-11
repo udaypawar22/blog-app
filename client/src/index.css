@@ -8,3 +8,75 @@ input[type="email"],
 input[type="summary"] {
   @apply w-full mt-1 py-3 px-2 border border-gray-200 rounded-md;
 }
+
+.search-box {
+  @apply py-1 m-0 px-0 border-none bg-transparent focus:outline-none active:outline-none !important;
+}
+
+.ql-editor h1 {
+  font-size: 2rem;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.ql-editor h2 {
+  font-size: 1.5rem;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+}
+
+.ql-editor strong {
+  font-weight: bold;
+}
+
+.ql-editor em {
+  font-style: italic;
+}
+
+.ql-editor u {
+  text-decoration: underline;
+}
+
+.ql-editor strike {
+  text-decoration: line-through;
+}
+
+.ql-editor blockquote {
+  margin: 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid #ccc;
+}
+
+.ql-editor ol,
+.ql-editor ul {
+  padding-left: 1.5em;
+}
+
+.ql-editor li {
+  margin-bottom: 0.25em;
+}
+
+.ql-editor .ql-indent-1 {
+  padding-left: 2em;
+}
+
+.ql-editor .ql-indent-2 {
+  padding-left: 4em;
+}
+
+.ql-editor a {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.ql-editor .ql-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1em 0;
+}
+
+/* Clean */
+.ql-editor .ql-clean::before {
+  content: "✂️";
+}

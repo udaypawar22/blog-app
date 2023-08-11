@@ -1,10 +1,13 @@
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import img from "../assets/createblogbanner.jpg";
-import { useState } from "react";
+import createbanner from "../assets/createblogbanner.jpg";
+import editbanner from "../assets/editbanner.jpg";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate, useParams } from "react-router-dom";
+import LoadingAnimation from "../components/LoadingAnimation";
 
 const modules = {
   toolbar: [
@@ -16,7 +19,7 @@ const modules = {
       { indent: "-1" },
       { indent: "+1" },
     ],
-    ["link", "image"],
+    ["link"],
     ["clean"],
   ],
 };
@@ -31,19 +34,101 @@ const formats = [
   "bullet",
   "indent",
   "link",
-  "image",
 ];
 
 export default function Post() {
+  const { id } = useParams();
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
   const [file, setFile] = useState("");
-  const [selectedOption, setSelectedOption] = useState("");
+  const [selectedOption, setSelectedOption] = useState("sports");
   const [otherBtn, setOtherBtn] = useState(false);
   const [otherInfo, setOtherInfo] = useState("");
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  function createPost(ev) {
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    axios
+      .get(`/blog-post/${id}`)
+      .then((response) => {
+        const { data } = response;
+        console.log(data);
+        setTitle(data.title);
+        setSummary(data.summary);
+        setContent(data.content);
+        setFile(data.cover);
+
+        if (
+          data.class === "sports" ||
+          data.class === "entertainment" ||
+          data.class === "lifestyle"
+        ) {
+          setSelectedOption(data.class);
+        } else {
+          setOtherBtn(true);
+          setOtherInfo(data.class);
+          setSelectedOption("other");
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error(error);
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) {
+    return <LoadingAnimation />;
+  }
+
+  function createPost(formData) {
+    axios
+      .post("/post", formData)
+      .then((response) => {
+        if (response.data === "OK") {
+          toast.success("Success", {
+            position: "top-right",
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          });
+          setTitle("");
+          setSummary("");
+          setContent("");
+          setFile("");
+          setSelectedOption("sports");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+
+  async function editPost(formData) {
+    const { data } = await toast.promise(
+      axios.put(`/post?data=${id}`, formData),
+      {
+        pending: "Processing...",
+        success: "Updated successfully",
+        error: "A problem occurred",
+      }
+    );
+    if (data === "OK") {
+      setTimeout(() => {
+        navigate(-1);
+      }, 2000);
+    }
+  }
+
+  function handlePost(ev) {
     ev.preventDefault();
 
     const formData = new FormData();
@@ -56,28 +141,12 @@ export default function Post() {
     } else {
       formData.append("class", selectedOption);
     }
-    console.log(formData);
-    axios
-      .post("/post", formData)
-      .then((response) => {
-        toast.success("Success", {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-        });
-        setTitle("");
-        setSummary("");
-        setContent("");
-        setFile("");
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+
+    if (!id) {
+      createPost(formData);
+    } else {
+      editPost(formData);
+    }
   }
 
   const handleRadioChange = (ev) => {
@@ -97,16 +166,16 @@ export default function Post() {
       <div className="relative">
         <div className="absolute top-1/4 w-full text-center">
           <h1 className="text-5xl font-medium text-white">
-            Create your blog post
+            {id ? "Edit your blog post" : "Create your blog post"}
           </h1>
         </div>
         <img
-          className="w-full h-[500px] object-cover aspect-square"
-          src={img}
+          className="w-full h-[300px] lg:h-[500px] object-cover aspect-square"
+          src={id ? editbanner : createbanner}
           alt=""
         />
       </div>
-      <form onSubmit={createPost} className="pt-14 px-12 min-h-screen">
+      <form onSubmit={handlePost} className="pt-14 px-12 min-h-screen">
         <label className="mb-2 text-gray-500 flex gap-1 px-10 w-fit py-4 border rounded-md cursor-pointer">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -155,6 +224,7 @@ export default function Post() {
               type="radio"
               name="r1"
               value="sports"
+              checked={selectedOption === "sports" ? true : false}
               onChange={handleRadioChange}
             />
             <span>Sports</span>
@@ -173,6 +243,7 @@ export default function Post() {
               type="radio"
               name="r1"
               value="lifestyle"
+              checked={selectedOption === "lifestyle" ? true : false}
               onChange={handleRadioChange}
             />
             <span>Lifestyle</span>
@@ -182,6 +253,7 @@ export default function Post() {
               type="radio"
               name="r1"
               value="other"
+              checked={selectedOption === "other" ? true : false}
               onChange={handleRadioChange}
             />
             <span>Other</span>
@@ -197,10 +269,10 @@ export default function Post() {
         </div>
 
         <button className="mt-4 bg-darkblue mx-auto py-3 px-10 text-white rounded-md text-md font-medium">
-          Create post
+          {id ? "Save post" : "Create post"}
         </button>
       </form>
-      <ToastContainer />
+      <ToastContainer autoClose={2000} />
     </div>
   );
 }

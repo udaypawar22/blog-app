@@ -22,7 +22,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(
   cors({
     credentials: true,
-    origin: "http://localhost:5173",
+    origin: process.env.CLIENT_URL,
   })
 );
 
@@ -32,11 +32,26 @@ const bcryptSalt = bcrypt.genSaltSync(10);
 
 mongoose.connect(process.env.MONGO_URL);
 
-app.get("/test", (req, res) => {
+function handlePhotos(file) {
+  let newFileName = "";
+  if (file) {
+    const { originalname, path: filePath } = file;
+    const split = originalname.split(".");
+    const ext = split[split.length - 1];
+    newFileName = Date.now() + "." + ext;
+    const newPath = path.join(__dirname, "uploads", newFileName);
+    fs.renameSync(filePath, newPath);
+  } else {
+    newFileName = "default.jpg";
+  }
+  return newFileName;
+}
+
+app.get("/api/test", (req, res) => {
   res.json("ok");
 });
 
-app.post("/register", async (req, res) => {
+app.post("/api/register", async (req, res) => {
   const { userName, email, password } = req.body;
   const userDoc = await User.create({
     userName,
@@ -46,7 +61,7 @@ app.post("/register", async (req, res) => {
   res.status(200).json({ userDoc });
 });
 
-app.post("/login", async (req, res) => {
+app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
   const userDoc = await User.findOne({ email });
   if (userDoc) {
@@ -64,7 +79,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/profile", (req, res) => {
+app.get("/api/profile", (req, res) => {
   const { token } = req.cookies;
   if (token) {
     jwt.verify(token, jwtSecret, {}, async (err, userData) => {
@@ -77,7 +92,7 @@ app.get("/profile", (req, res) => {
   }
 });
 
-app.post("/logout", (req, res) => {
+app.post("/api/logout", (req, res) => {
   const { token } = req.cookies;
 
   if (token) {
@@ -85,14 +100,13 @@ app.post("/logout", (req, res) => {
   }
 });
 
-app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
+app.post("/api/post", uploadMiddleware.single("file"), async (req, res) => {
   const data = req.body;
   const file = req.file;
   const { token } = req.cookies;
-  let newFileName = "";
   let postDoc = {};
   let userId = "";
-  console.log(data);
+
   if (token) {
     jwt.verify(token, jwtSecret, {}, (err, userData) => {
       if (err) throw err;
@@ -100,16 +114,8 @@ app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
     });
   }
 
-  if (file) {
-    const { originalname, path: filePath } = file;
-    const split = originalname.split(".");
-    const ext = split[split.length - 1];
-    newFileName = Date.now() + "." + ext;
-    const newPath = path.join(__dirname, "uploads", newFileName);
-    fs.renameSync(filePath, newPath);
-  } else {
-    newFileName = "default.jpg";
-  }
+  const newFileName = handlePhotos(file);
+
   try {
     postDoc = await Post.create({
       title: data.title,
@@ -125,23 +131,38 @@ app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
   return res.status(201).json("OK");
 });
 
-app.get("/post", async (req, res) => {
-  const authorName = req.query.data;
-  if (authorName) {
-    const { token } = req.cookies;
-    if (token) {
-      jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-        if (err) {
-          res.status(401).json({ error: "Unauthorized" });
-        } else {
-          try {
-            const authorPosts = await Post.find({ author: userData.userId });
-            res.status(201).json(authorPosts);
-          } catch (error) {
-            res.status(500).json(error);
+app.get("/api/post", async (req, res) => {
+  const urlData = req.query.data;
+  if (urlData) {
+    if (
+      urlData === "sports" ||
+      urlData === "entertainment" ||
+      urlData === "lifestyle"
+    ) {
+      try {
+        const categoryPosts = await Post.find({ class: urlData });
+        res.status(201).json(categoryPosts);
+      } catch (error) {
+        res.status(500).json(error);
+      }
+    } else {
+      const { token } = req.cookies;
+      if (token) {
+        jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+          if (err) {
+            res.status(401).json({ error: "Unauthorized" });
+          } else {
+            try {
+              const authorPosts = await Post.find({
+                author: userData.userId,
+              }).sort({ createdAt: -1 });
+              res.status(201).json(authorPosts);
+            } catch (error) {
+              res.status(500).json(error);
+            }
           }
-        }
-      });
+        });
+      }
     }
   } else {
     try {
@@ -153,8 +174,55 @@ app.get("/post", async (req, res) => {
   }
 });
 
-app.get("/blog-post/:id", async (req, res) => {
+app.put("/api/post", uploadMiddleware.single("file"), (req, res) => {
+  const { token } = req.cookies;
+  const postId = req.query.data;
+  const data = req.body;
+  const file = req.file;
+  let newFileName = "";
+  console.log(postId);
+  if (token) {
+    jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+      if (err) {
+        res.status(401).json({ error: "Unauthorized" });
+      } else {
+        try {
+          const postDoc = await Post.findOne({ _id: postId });
+          if (file && file !== postDoc.cover) {
+            newFileName = handlePhotos(file);
+          } else {
+            newFileName = postDoc.cover;
+          }
+          if (userData.userId === postDoc.author.toString()) {
+            postDoc.set({
+              title: data.title,
+              summary: data.summary,
+              content: data.content,
+              cover: newFileName,
+              class: data.class,
+            });
+            await postDoc.save();
+            res.json("OK");
+          }
+        } catch (error) {
+          res.status(500).json(error);
+        }
+      }
+    });
+  }
+});
+
+app.get("/api/blog-post/:id?", async (req, res) => {
   const { id } = req.params;
+  const key = req.query.data;
+  if (key) {
+    const regex = new RegExp(key.toLowerCase(), "i");
+    return res.json(
+      await Post.findOne({
+        title: { $regex: regex },
+      })
+    );
+  }
   try {
     const postDoc = await Post.findOne({ _id: id }).populate({
       path: "author",

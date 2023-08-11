@@ -3,16 +3,30 @@ import img from "../assets/mainbg.jpg";
 import axios from "axios";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
+import LoadingAnimation from "../components/LoadingAnimation";
 
 export default function HomePage() {
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("/post").then((response) => {
-      console.log(response.data);
-      setPosts(response.data);
-    });
+    setLoading(true);
+    axios
+      .get("/post")
+      .then((response) => {
+        console.log(response.data);
+        setPosts(response.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error(error);
+        setLoading(false);
+      });
   }, []);
+
+  if (loading) {
+    return <LoadingAnimation />;
+  }
   return (
     <div>
       <div className="relative">
@@ -24,7 +38,7 @@ export default function HomePage() {
         </div>
         <img className="w-full object-cover aspect-video" src={img} alt="" />
       </div>
-      <div className="grid grid-cols-4 gap-x-6 gap-y-12 px-12 pt-14 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12 px-12 pt-14 mb-6">
         {posts.length > 0 &&
           posts.map((post) => (
             <Link to={"/" + post._id}>
@@ -37,7 +51,7 @@ export default function HomePage() {
               </div>
               <div className="mt-3">
                 <h3 className="text-sm text-gray-500">
-                  {format(new Date(post.createdAt), "dd.mm.yyyy")}
+                  {format(new Date(post.createdAt), "dd.MM.yyyy")}
                 </h3>
                 <h1 className="mt-4 text-2xl text-gray-700 font-serif">
                   {post.title}
