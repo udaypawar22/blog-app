@@ -234,6 +234,7 @@ export default function Post() {
               type="radio"
               name="r1"
               value="entertainment"
+              checked={selectedOption === "entertainment" ? true : false}
               onChange={handleRadioChange}
             />
             <span>Entertainment</span>
