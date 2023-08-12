@@ -45,7 +45,7 @@ export default function HomePage() {
               <div className="w-full rounded-md overflow-hidden">
                 <img
                   className="object-cover aspect-square"
-                  src={"http://localhost:4000/uploads/" + post.cover}
+                  src={import.meta.env.VITE_API_UPLOAD + post.cover}
                   alt=""
                 />
               </div>

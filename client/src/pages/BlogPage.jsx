@@ -37,7 +37,7 @@ export default function BlogPage() {
       <div className="w-full">
         <img
           className="w-full h-[500px] object-cover aspect-square"
-          src={"http://localhost:4000/uploads/" + postData.cover}
+          src={import.meta.env.VITE_API_UPLOAD + postData.cover}
           alt=""
         />
       </div>
