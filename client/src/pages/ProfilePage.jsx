@@ -130,7 +130,7 @@ export default function ProfiilePage() {
                 </div>
                 <img
                   className="w-full h-[300px] lg:h-[500px] object-cover aspect-square"
-                  src={"http://localhost:4000/uploads/" + post.cover}
+                  src={import.meta.env.VITE_API_UPLOAD + post.cover}
                   alt=""
                 />
               </div>
