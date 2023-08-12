@@ -69,7 +69,9 @@ app.post("/api/login", async (req, res) => {
     if (result) {
       jwt.sign({ userId: userDoc._id }, jwtSecret, {}, (err, token) => {
         if (err) throw err;
-        res.cookie("token", token).json(userDoc);
+        res
+          .cookie("token", token, { sameSite: "none", secure: true })
+          .json(userDoc);
       });
     } else {
       res.status(401).json("password is incorrect");

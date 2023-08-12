@@ -4,7 +4,6 @@ export const UserContext = createContext({});
 
 export default function UserContextProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     axios
