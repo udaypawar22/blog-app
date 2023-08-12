@@ -1,9 +1,3 @@
-[build]
-  base = "client/build"
-
-[build.environment]
-  API_URL = "/.netlify/functions/api"
-
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
