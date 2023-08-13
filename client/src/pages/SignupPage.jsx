@@ -1,15 +1,17 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import coverimg from "../assets/animation_lktx2rbq.json";
 import { useState } from "react";
 import axios from "axios";
 import Lottie from "lottie-react";
 import successGif from "../assets/animation_lkr62eqt.json";
+import { ToastContainer, toast } from "react-toastify";
 
 export default function SignupPage() {
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSuccessful, setIsSuccessful] = useState(false);
+  const navigate = useNavigate();
 
   async function registerUser(ev) {
     ev.preventDefault();
@@ -21,15 +23,29 @@ export default function SignupPage() {
       })
       .then(
         (result) => {
-          console.log(result);
-          setIsSuccessful(true);
+          if (result.data === "OK") {
+            setIsSuccessful(true);
+          }
         },
         (error) => {
-          console.log("error");
+          console.error(error);
+          toast.error("username/email not available", {
+            position: "top-right",
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          });
         }
       );
   }
-
+  if (isSuccessful) {
+    setTimeout(() => {
+      navigate(-1);
+    }, 5000);
+  }
   return (
     <div className={"grid grid-cols-1 lg:grid-cols-2 min-h-screen"}>
       <div className="flex items-center">
@@ -111,6 +127,7 @@ export default function SignupPage() {
           </div>
         </div>
       )}
+      <ToastContainer autoClose={5000} />
     </div>
   );
 }

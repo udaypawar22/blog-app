@@ -53,31 +53,39 @@ app.get("/api/test", (req, res) => {
 
 app.post("/api/register", async (req, res) => {
   const { userName, email, password } = req.body;
-  const userDoc = await User.create({
-    userName,
-    email,
-    password: bcrypt.hashSync(password, bcryptSalt),
-  });
-  res.status(200).json({ userDoc });
+  try {
+    await User.create({
+      userName,
+      email,
+      password: bcrypt.hashSync(password, bcryptSalt),
+    });
+    res.status(200).json("OK");
+  } catch (error) {
+    res.status(500).json(error);
+  }
 });
 
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
-  const userDoc = await User.findOne({ email });
-  if (userDoc) {
-    const result = bcrypt.compareSync(password, userDoc.password);
-    if (result) {
-      jwt.sign({ userId: userDoc._id }, jwtSecret, {}, (err, token) => {
-        if (err) throw err;
-        res
-          .cookie("token", token, { sameSite: "none", secure: true })
-          .json(userDoc);
-      });
+  try {
+    const userDoc = await User.findOne({ email });
+    if (userDoc) {
+      const result = bcrypt.compareSync(password, userDoc.password);
+      if (result) {
+        jwt.sign({ userId: userDoc._id }, jwtSecret, {}, (err, token) => {
+          if (err) throw err;
+          res
+            .cookie("token", token, { sameSite: "none", secure: true })
+            .json(userDoc);
+        });
+      } else {
+        res.status(401).json("password is incorrect");
+      }
     } else {
-      res.status(401).json("password is incorrect");
+      res.status(404).json("user not found");
     }
-  } else {
-    res.status(404).json("user not found");
+  } catch (error) {
+    res.status(500).json(error);
   }
 });
 
@@ -86,11 +94,15 @@ app.get("/api/profile", (req, res) => {
   if (token) {
     jwt.verify(token, jwtSecret, {}, async (err, userData) => {
       if (err) throw err;
-      const userDoc = await User.findOne({ _id: userData.userId });
-      res.json(userDoc);
+      try {
+        const userDoc = await User.findOne({ _id: userData.userId });
+        res.status(200).json(userDoc);
+      } catch (error) {
+        res.status(500).json(error);
+      }
     });
   } else {
-    res.json(null);
+    res.status(404).json(null);
   }
 });
 

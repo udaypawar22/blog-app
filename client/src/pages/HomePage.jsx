@@ -20,6 +20,15 @@ export default function HomePage() {
       })
       .catch((error) => {
         console.error(error);
+        toast.error("Couldn't fetch data", {
+          position: "top-right",
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
         setLoading(false);
       });
   }, []);
