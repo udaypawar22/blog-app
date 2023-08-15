@@ -4,6 +4,7 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import LoadingAnimation from "../components/LoadingAnimation";
+import EmptyVector from "../components/EmptyVector";
 
 export default function ProfiilePage() {
   const navigate = useNavigate();
@@ -136,6 +137,7 @@ export default function ProfiilePage() {
               </div>
             </Link>
           ))}
+        {posts.length === 0 && <EmptyVector className={"pt-24"} />}
       </div>
     </div>
   );

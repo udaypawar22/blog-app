@@ -3,6 +3,7 @@ import coverimg from "../assets/coverimage.jpg";
 import { useContext, useState } from "react";
 import axios from "axios";
 import { UserContext } from "../components/UserContext";
+import { ToastContainer, toast } from "react-toastify";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,9 +17,21 @@ export default function LoginPage() {
 
   async function handleLogin(ev) {
     ev.preventDefault();
-    const { data } = await axios.post("/login", { email, password });
-    setUser(data.userName);
-    setRedirect(true);
+    try {
+      const { data } = await axios.post("/login", { email, password });
+      setUser(data.userName);
+      setRedirect(true);
+    } catch (error) {
+      toast.error("User not found", {
+        position: "top-right",
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+    }
   }
 
   if (redirect) {
@@ -95,6 +108,7 @@ export default function LoginPage() {
           </form>
         </div>
       </div>
+      <ToastContainer autoClose={2000} />
     </div>
   );
 }

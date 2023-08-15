@@ -57,7 +57,6 @@ export default function Post() {
       .get(`/blog-post/${id}`)
       .then((response) => {
         const { data } = response;
-        console.log(data);
         setTitle(data.title);
         setSummary(data.summary);
         setContent(data.content);
@@ -95,39 +94,31 @@ export default function Post() {
     return <LoadingAnimation />;
   }
 
-  function createPost(formData) {
-    axios
-      .post("/post", formData)
-      .then((response) => {
-        if (response.data === "OK") {
-          toast.success("Success", {
-            position: "top-right",
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "light",
-          });
-          setTitle("");
-          setSummary("");
-          setContent("");
-          setFile("");
-          setSelectedOption("sports");
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error("An error occurred", {
-          position: "top-right",
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-        });
+  async function createPost(formData) {
+    try {
+      const response = await toast.promise(axios.post("/post", formData), {
+        pending: "Processing...",
+        success: "Successful",
+        error: "Failed",
       });
+      if (response.data === "OK") {
+        setTitle("");
+        setSummary("");
+        setContent("");
+        setFile("");
+        setSelectedOption("sports");
+      }
+    } catch (error) {
+      toast.error("An error occurred", {
+        position: "top-right",
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+    }
   }
 
   async function editPost(formData) {

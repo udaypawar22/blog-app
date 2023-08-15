@@ -4,6 +4,7 @@ import axios from "axios";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import LoadingAnimation from "../components/LoadingAnimation";
+import EmptyVector from "../components/EmptyVector";
 
 export default function HomePage() {
   const [posts, setPosts] = useState([]);
@@ -14,8 +15,7 @@ export default function HomePage() {
     axios
       .get("/post")
       .then((response) => {
-        console.log(response.data);
-        setPosts(response.data);
+        //setPosts(response.data);
         setLoading(false);
       })
       .catch((error) => {
@@ -72,6 +72,9 @@ export default function HomePage() {
             </Link>
           ))}
       </div>
+      {posts.length === 0 && (
+        <EmptyVector className={"min-h-screen items-center justify-center"} />
+      )}
     </div>
   );
 }

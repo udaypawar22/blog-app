@@ -6,6 +6,7 @@ import entertainmentbanner from "../assets/entertainmentbanner.jpg";
 import { format } from "date-fns";
 import axios from "axios";
 import LoadingAnimation from "../components/LoadingAnimation";
+import EmptyVector from "../components/EmptyVector";
 
 const bannerImages = {
   sports: sportsbanner,
@@ -79,6 +80,13 @@ export default function ClassPage() {
             </Link>
           ))}
       </div>
+      {posts.length === 0 && (
+        <EmptyVector
+          className={
+            "min-h-[300px] lg:min-h-[500px] items-center justify-center"
+          }
+        />
+      )}
     </div>
   );
 }
