@@ -15,7 +15,7 @@ export default function HomePage() {
     axios
       .get("/post")
       .then((response) => {
-        //setPosts(response.data);
+        setPosts(response.data);
         setLoading(false);
       })
       .catch((error) => {
