@@ -194,7 +194,6 @@ app.put("/api/post", uploadMiddleware.single("file"), (req, res) => {
   const data = req.body;
   const file = req.file;
   let newFileName = "";
-  console.log(postId);
   if (token) {
     jwt.verify(token, jwtSecret, {}, async (err, userData) => {
       if (err) {
