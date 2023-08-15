@@ -104,7 +104,7 @@ export default function ProfiilePage() {
               to={`/${post._id}`}
               className="shadow rounded-sm overflow-hidden"
             >
-              <div className="w-full">
+              <div className="w-full relative">
                 <motion.button
                   className="absolute top-2 right-2 text-white p-2"
                   whileHover={{ scale: 1.2 }}
