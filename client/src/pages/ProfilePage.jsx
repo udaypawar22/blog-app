@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import LoadingAnimation from "../components/LoadingAnimation";
 import EmptyVector from "../components/EmptyVector";
+import { format } from "date-fns";
 
 export default function ProfiilePage() {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ export default function ProfiilePage() {
         <h1 className="text-3xl md:text-5xl text-gray-400 font-bold w-fit">
           {user}
         </h1>
+
         <div className="flex gap-2">
           <Link
             to={"/profile/create"}
@@ -98,8 +100,11 @@ export default function ProfiilePage() {
       <div className="pt-10 pb-8 grid gap-y-8">
         {posts.length > 0 &&
           posts.map((post) => (
-            <Link to={`/${post._id}`} className="shadow">
-              <div className="w-full relative">
+            <Link
+              to={`/${post._id}`}
+              className="shadow rounded-sm overflow-hidden"
+            >
+              <div className="w-full">
                 <motion.button
                   className="absolute top-2 right-2 text-white p-2"
                   whileHover={{ scale: 1.2 }}
@@ -124,21 +129,23 @@ export default function ProfiilePage() {
                     />
                   </svg>
                 </motion.button>
-                <div className="absolute top-3/4 w-full">
-                  <h1 className="ml-10 w-3/4 py-2 lg:w-1/4 text-4xl font-medium text-white truncate italic">
-                    {post.title}
-                  </h1>
-                </div>
                 <img
                   className="w-full h-[300px] lg:h-[500px] object-cover aspect-square"
                   src={import.meta.env.VITE_API_UPLOAD + post.cover}
                   alt=""
                 />
+                <div className="bg-gray-50 px-8 pb-8">
+                  <h1 className="pt-4 text-2xl font-semibold">{post.title}</h1>
+                  <h3 className="pt-2 text-darkblue">
+                    {format(new Date(post.createdAt), "d MMMM, yyyy")}
+                  </h3>
+                  <p className="pt-4 text-gray-600">{post.summary}</p>
+                </div>
               </div>
             </Link>
           ))}
-        {posts.length === 0 && <EmptyVector className={"pt-24"} />}
       </div>
+      {posts.length === 0 && <EmptyVector className={"pt-24"} />}
     </div>
   );
 }
