@@ -27,7 +27,15 @@ app.use(
   })
 );
 const bucket = "mern-blogger-app";
-const uploadMiddleware = multer({ dest: "/temp" });
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, "uploads"));
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${Date.now()}${path.extname(file.originalname)}`);
+  },
+});
+const uploadMiddleware = multer({ storage: storage });
 const jwtSecret = process.env.JWT_SECRET;
 const bcryptSalt = bcrypt.genSaltSync(10);
 
@@ -42,33 +50,19 @@ async function uploadToS3(file) {
     },
   });
 
-  const { path, mimetype } = file;
-  let fileName = handlePhotos(file);
-  if (fileName === "") {
-    fileName = "default.jpg";
-  }
+  const { path, mimetype, filename } = file;
 
   const data = await client.send(
     new PutObjectCommand({
       Bucket: bucket,
       Body: fs.readFileSync(path),
-      Key: fileName,
+      Key: filename,
       ContentType: mimetype,
       ACL: "public-read",
     })
   );
-  return fileName;
-}
 
-function handlePhotos(file) {
-  let newFileName = "";
-  if (file) {
-    const { originalname } = file;
-    const split = originalname.split(".");
-    const ext = split[split.length - 1];
-    newFileName = Date.now() + "." + ext;
-  }
-  return newFileName;
+  return filename;
 }
 
 app.get("/api/test", (req, res) => {
@@ -152,21 +146,24 @@ app.post("/api/post", uploadMiddleware.single("file"), async (req, res) => {
     });
   }
 
-  const newFileName = await uploadToS3(file);
-
-  try {
-    postDoc = await Post.create({
-      title: data.title,
-      summary: data.summary,
-      content: data.content,
-      cover: newFileName,
-      class: data.class,
-      author: userId,
-    });
-  } catch (error) {
-    return res.status(500).json(error);
+  if (!file) {
+    res.status(400).json("No file selected");
+  } else {
+    try {
+      const newFileName = await uploadToS3(file);
+      postDoc = await Post.create({
+        title: data.title,
+        summary: data.summary,
+        content: data.content,
+        cover: newFileName,
+        class: data.class,
+        author: userId,
+      });
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+    return res.status(201).json("OK");
   }
-  return res.status(201).json("OK");
 });
 
 app.get("/api/post", async (req, res) => {

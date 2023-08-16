@@ -95,8 +95,9 @@ export default function Post() {
   }
 
   async function createPost(formData) {
+    let response = {};
     try {
-      const response = await toast.promise(axios.post("/post", formData), {
+      response = await toast.promise(axios.post("/post", formData), {
         pending: "Processing...",
         success: "Successful",
         error: "Failed",
@@ -109,7 +110,7 @@ export default function Post() {
         setSelectedOption("sports");
       }
     } catch (error) {
-      toast.error("An error occurred", {
+      toast.error(error.response.data, {
         position: "top-right",
         hideProgressBar: false,
         closeOnClick: true,
