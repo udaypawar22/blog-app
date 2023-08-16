@@ -62,7 +62,7 @@ export default function ClassPage() {
               <div className="w-full rounded-md overflow-hidden">
                 <img
                   className="object-cover aspect-square"
-                  src={import.meta.env.VITE_API_UPLOAD + post.cover}
+                  src={import.meta.env.VITE_API_S3_URL + post.cover}
                   alt=""
                 />
               </div>

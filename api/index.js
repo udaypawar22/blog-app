@@ -12,6 +12,7 @@ const path = require("path");
 const fs = require("fs");
 const User = require("./models/User");
 const Post = require("./models/Post");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const app = express();
 
 require("dotenv").config();
@@ -25,24 +26,47 @@ app.use(
     origin: process.env.CLIENT_URL,
   })
 );
-
-const uploadMiddleware = multer({ dest: path.join(__dirname, "uploads") });
+const bucket = "mern-blogger-app";
+const uploadMiddleware = multer({ dest: "/temp" });
 const jwtSecret = process.env.JWT_SECRET;
 const bcryptSalt = bcrypt.genSaltSync(10);
 
 mongoose.connect(process.env.MONGO_URL);
 
+async function uploadToS3(file) {
+  const client = new S3Client({
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: process.env.S3_ACCESS_KEY,
+      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+    },
+  });
+
+  const { path, mimetype } = file;
+  let fileName = handlePhotos(file);
+  if (fileName === "") {
+    fileName = "default.jpg";
+  }
+
+  const data = await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Body: fs.readFileSync(path),
+      Key: fileName,
+      ContentType: mimetype,
+      ACL: "public-read",
+    })
+  );
+  return fileName;
+}
+
 function handlePhotos(file) {
   let newFileName = "";
   if (file) {
-    const { originalname, path: filePath } = file;
+    const { originalname } = file;
     const split = originalname.split(".");
     const ext = split[split.length - 1];
     newFileName = Date.now() + "." + ext;
-    const newPath = path.join(__dirname, "uploads", newFileName);
-    fs.renameSync(filePath, newPath);
-  } else {
-    newFileName = "default.jpg";
   }
   return newFileName;
 }
@@ -128,7 +152,7 @@ app.post("/api/post", uploadMiddleware.single("file"), async (req, res) => {
     });
   }
 
-  const newFileName = handlePhotos(file);
+  const newFileName = await uploadToS3(file);
 
   try {
     postDoc = await Post.create({
@@ -202,7 +226,7 @@ app.put("/api/post", uploadMiddleware.single("file"), (req, res) => {
         try {
           const postDoc = await Post.findOne({ _id: postId });
           if (file && file !== postDoc.cover) {
-            newFileName = handlePhotos(file);
+            newFileName = await uploadToS3(file);
           } else {
             newFileName = postDoc.cover;
           }

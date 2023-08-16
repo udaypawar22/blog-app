@@ -131,7 +131,7 @@ export default function ProfiilePage() {
                 </motion.button>
                 <img
                   className="w-full h-[300px] lg:h-[500px] object-cover aspect-square"
-                  src={import.meta.env.VITE_API_UPLOAD + post.cover}
+                  src={import.meta.env.VITE_API_S3_URL + post.cover}
                   alt=""
                 />
                 <div className="bg-gray-50 px-8 pb-8">
@@ -139,7 +139,9 @@ export default function ProfiilePage() {
                   <h3 className="pt-2 text-darkblue">
                     {format(new Date(post.createdAt), "d MMMM, yyyy")}
                   </h3>
-                  <p className="pt-4 text-gray-600">{post.summary}</p>
+                  <p className="pt-4 text-gray-600 line-clamp-3">
+                    {post.summary}
+                  </p>
                 </div>
               </div>
             </Link>
